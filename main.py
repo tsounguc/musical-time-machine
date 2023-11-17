@@ -20,23 +20,19 @@ song_titles = [song.find(name="h3").getText().strip() for song in songs]
 print(song_titles)
 
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=f"{client_id}",
-                                               client_secret=f"{client_secret}", redirect_uri="http://example.com"))
+                                               client_secret=f"{client_secret}", redirect_uri="http://example.com", scope="playlist-modify-public"))
 
-currentUser = sp.current_user()
-print(currentUser['id'])
-
-song_uri_list = []
+current_user_id = sp.current_user()['id']
+playlist = sp.user_playlist_create(user=current_user_id, name=f"{date} Billboard 100",)
+print(playlist)
+uri_list = []
 for title in song_titles:
     result = sp.search(q=f"track:{title} year:{date.split("-")[0]}", type="track", limit=3)
     # pprint(result['tracks']["items"][0])
     try:
         uri = result['tracks']["items"][0]['uri']
-        song_uri_list.append(uri)
+        uri_list.append(uri)
     except IndexError:
         print(f"{title} Doesn't exist in Spotify. Skipped")
 
-print(song_uri_list)
-print(len(song_uri_list))
-# for idx, track in enumerate(results['tracks']['items']):
-#     # if year.split("-")[0] in track['release_date']:
-#         print(f"{track['artists'][0]['name']} - {idx, track['name']} {track['release_date']}")
+sp.playlist_add_items(playlist_id=playlist['id'], items=uri_list)
